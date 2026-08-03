@@ -467,6 +467,349 @@ Los scripts se ejecutan en orden y quedan respaldados en backend/sql/:
 - faseN_pruebas.sql (pruebas de cada fase).
 
 
+## Diagrama de relaciones
+
+
+```mermaid
+erDiagram
+    %% ================= SEGURIDAD Y USUARIOS =================
+    TB_Usuario {
+        int IdUsuario PK
+        varchar Usuario UK
+        varchar PasswordHash
+        bit Activo
+        int IdBombero FK
+    }
+    TB_Bombero {
+        int IdBombero PK
+        varchar DNI
+        int IdCargo FK
+    }
+    TB_Cargo {
+        int IdCargo PK
+        varchar Nombre
+    }
+    TB_Rol {
+        int IdRol PK
+        varchar Nombre
+    }
+    TB_Permiso {
+        int IdPermiso PK
+        varchar Nombre
+    }
+    TB_UsuarioRol {
+        int IdUsuario FK
+        int IdRol FK
+    }
+    TB_RolPermiso {
+        int IdRol FK
+        int IdPermiso FK
+    }
+    TB_SesionUsuario {
+        int IdSesion PK
+        int IdUsuario FK
+    }
+    TB_LogAccesoWeb {
+        int IdLog PK
+        int IdUsuario FK
+    }
+    TB_TokenAPI {
+        int IdToken PK
+        int IdUsuario FK
+    }
+    TB_HistorialCargo {
+        int IdHistorial PK
+        int IdBombero FK
+        int IdCargo FK
+    }
+
+    TB_Cargo ||--o{ TB_Bombero : "IdCargo"
+    TB_Bombero ||--o{ TB_Usuario : "IdBombero"
+    TB_Bombero ||--o{ TB_HistorialCargo : "IdBombero"
+    TB_Cargo ||--o{ TB_HistorialCargo : "IdCargo"
+    TB_Usuario ||--o{ TB_UsuarioRol : "IdUsuario"
+    TB_Rol ||--o{ TB_UsuarioRol : "IdRol"
+    TB_Rol ||--o{ TB_RolPermiso : "IdRol"
+    TB_Permiso ||--o{ TB_RolPermiso : "IdPermiso"
+    TB_Usuario ||--o{ TB_SesionUsuario : "IdUsuario"
+    TB_Usuario ||--o{ TB_LogAccesoWeb : "IdUsuario"
+    TB_Usuario ||--o{ TB_TokenAPI : "IdUsuario"
+
+    %% ================= CATALOGOS =================
+    TB_Articulo {
+        int IdArticulo PK
+        varchar Nombre
+        varchar Codigo
+    }
+    TB_Marca {
+        int IdMarca PK
+        varchar Nombre
+    }
+    TB_Modelo {
+        int IdModelo PK
+        varchar Nombre
+        int IdMarca FK
+    }
+    TB_Ubicacion {
+        int IdUbicacion PK
+        varchar Nombre
+        int IdUbicacionPadre FK
+    }
+    TB_EstadoBien {
+        int IdEstado PK
+        varchar Nombre
+    }
+    TB_TipoMovimiento {
+        int IdTipoMovimiento PK
+        varchar Nombre
+    }
+    TB_TipoMantenimiento {
+        int IdTipoMantenimiento PK
+        varchar Nombre
+    }
+    TB_TipoDocumento {
+        int IdTipoDocumento PK
+        varchar NombreDocumento
+        varchar CodigoDocumento
+    }
+    TB_TipoBaja {
+        int IdTipoBaja PK
+        varchar Nombre
+    }
+    TB_TipoEmergencia {
+        int IdTipoEmergencia PK
+        varchar Nombre
+    }
+
+    TB_Marca ||--o{ TB_Modelo : "IdMarca"
+    TB_Ubicacion ||--o{ TB_Ubicacion : "IdUbicacionPadre"
+
+    %% ================= NUCLEO: BIENES =================
+    TB_Bien {
+        int IdBien PK
+        varchar CodigoInterno UK
+        varchar CodigoPatrimonial
+        varchar NumeroSerie
+        int IdArticulo FK
+        int IdMarca FK
+        int IdModelo FK
+        int IdEstado FK
+        int IdUbicacion FK
+        int IdResponsableActual FK
+        bit Eliminado
+    }
+    TB_BienRelacion {
+        int IdBienPadre FK
+        int IdBienHijo FK
+    }
+    TB_QR_Bien {
+        int IdQR PK
+        int IdBien FK
+        varchar CodigoQR
+    }
+    TB_QRGenerado {
+        int IdQR PK
+        int IdBien FK
+    }
+    TB_EscaneoQR {
+        int IdEscaneo PK
+        int IdQR FK
+        int IdUsuario FK
+    }
+    TB_HistorialAsignacion {
+        int IdHistorial PK
+        int IdBien FK
+        int IdBombero FK
+    }
+    TB_HistorialEstadoBien {
+        int IdHistorial PK
+        int IdBien FK
+        int EstadoNuevo FK
+    }
+
+    TB_Articulo ||--o{ TB_Bien : "IdArticulo"
+    TB_Marca ||--o{ TB_Bien : "IdMarca"
+    TB_Modelo ||--o{ TB_Bien : "IdModelo"
+    TB_EstadoBien ||--o{ TB_Bien : "IdEstado"
+    TB_Ubicacion ||--o{ TB_Bien : "IdUbicacion"
+    TB_Bombero ||--o{ TB_Bien : "IdResponsableActual"
+    TB_Bien ||--o{ TB_BienRelacion : "IdBienPadre"
+    TB_Bien ||--o{ TB_BienRelacion : "IdBienHijo"
+    TB_Bien ||--o{ TB_QR_Bien : "IdBien"
+    TB_Bien ||--o{ TB_QRGenerado : "IdBien"
+    TB_QRGenerado ||--o{ TB_EscaneoQR : "IdQR"
+    TB_Usuario ||--o{ TB_EscaneoQR : "IdUsuario"
+    TB_Bien ||--o{ TB_HistorialAsignacion : "IdBien"
+    TB_Bombero ||--o{ TB_HistorialAsignacion : "IdBombero"
+    TB_Bien ||--o{ TB_HistorialEstadoBien : "IdBien"
+    TB_EstadoBien ||--o{ TB_HistorialEstadoBien : "EstadoNuevo"
+
+    %% ================= MOVIMIENTOS Y TRAZABILIDAD =================
+    TB_Movimiento {
+        int IdMovimiento PK
+        varchar CodigoMovimiento
+        int IdBien FK
+        int IdTipoMovimiento FK
+        int IdUsuario FK
+        datetime Fecha
+    }
+    TB_MovimientoDetalle {
+        int IdDetalle PK
+        int IdMovimiento FK
+        int IdBien FK
+    }
+    TB_Kardex {
+        int IdKardex PK
+        int IdBien FK
+        int IdMovimiento FK
+    }
+    TB_Prestamo {
+        int IdPrestamo PK
+        int IdBomberoSolicitante FK
+        int IdBomberoAutoriza FK
+    }
+    TB_PrestamoDetalle {
+        int IdDetalle PK
+        int IdPrestamo FK
+        int IdBien FK
+    }
+    TB_Devolucion {
+        int IdDevolucion PK
+        int IdPrestamo FK
+        int IdBomberoRecibe FK
+    }
+    TB_Baja {
+        int IdBaja PK
+        int IdBien FK
+        int IdTipoBaja FK
+        int ResponsableAutoriza FK
+    }
+    TB_Inventario {
+        int IdInventario PK
+        int Responsable FK
+    }
+    TB_InventarioDetalle {
+        int IdDetalle PK
+        int IdInventario FK
+        int IdBien FK
+    }
+
+    TB_TipoMovimiento ||--o{ TB_Movimiento : "IdTipoMovimiento"
+    TB_Usuario ||--o{ TB_Movimiento : "IdUsuario"
+    TB_Bien ||--o{ TB_Movimiento : "IdBien"
+    TB_Movimiento ||--o{ TB_MovimientoDetalle : "IdMovimiento"
+    TB_Bien ||--o{ TB_MovimientoDetalle : "IdBien"
+    TB_Movimiento ||--o{ TB_Kardex : "IdMovimiento"
+    TB_Bien ||--o{ TB_Kardex : "IdBien"
+    TB_Bombero ||--o{ TB_Prestamo : "IdBomberoSolicitante"
+    TB_Bombero ||--o{ TB_Prestamo : "IdBomberoAutoriza"
+    TB_Prestamo ||--o{ TB_PrestamoDetalle : "IdPrestamo"
+    TB_Bien ||--o{ TB_PrestamoDetalle : "IdBien"
+    TB_Prestamo ||--o{ TB_Devolucion : "IdPrestamo"
+    TB_Bombero ||--o{ TB_Devolucion : "IdBomberoRecibe"
+    TB_Bien ||--o{ TB_Baja : "IdBien"
+    TB_Bombero ||--o{ TB_Baja : "ResponsableAutoriza"
+    TB_Bombero ||--o{ TB_Inventario : "Responsable"
+    TB_Inventario ||--o{ TB_InventarioDetalle : "IdInventario"
+    TB_Bien ||--o{ TB_InventarioDetalle : "IdBien"
+
+    %% ================= MANTENIMIENTO =================
+    TB_Mantenimiento {
+        int IdMantenimiento PK
+        int IdBien FK
+        int IdTipoMantenimiento FK
+        varchar Diagnostico
+        datetime FechaInicio
+        datetime FechaFin
+    }
+    TB_MantenimientoRepuesto {
+        int IdRepuesto PK
+        int IdMantenimiento FK
+        varchar Nombre
+        decimal Costo
+    }
+
+    TB_Bien ||--o{ TB_Mantenimiento : "IdBien"
+    TB_TipoMantenimiento ||--o{ TB_Mantenimiento : "IdTipoMantenimiento"
+    TB_Mantenimiento ||--o{ TB_MantenimientoRepuesto : "IdMantenimiento"
+
+    %% ================= FOTOS Y DOCUMENTOS =================
+    TB_FotoBien {
+        int IdFoto PK
+        int IdBien FK
+        varchar NombreArchivo
+        varchar TipoFoto
+        varchar RutaGoogleDrive
+        varchar IdArchivoGoogleDrive
+        int TamanoOriginalKB
+        int TamanoComprimidoKB
+        int UsuarioCarga FK
+        bit Estado
+    }
+    TB_Foto {
+        int IdFoto PK
+        int IdBien FK
+        varchar TipoFoto
+        varchar RutaArchivo
+    }
+    TB_Documento {
+        int IdDocumento PK
+        varchar CodigoDocumento UK
+        varchar TipoDocumento
+        int IdBien FK
+        int IdMovimiento FK
+        int IdPrestamo FK
+        varchar RutaArchivo
+        varchar IdArchivoGoogleDrive
+    }
+    TB_Firma {
+        int IdFirma PK
+        int IdDocumento FK
+        int IdBombero FK
+    }
+    TB_DocumentoGenerado {
+        int IdDocumento PK
+        int IdBien FK
+        int IdMovimiento FK
+        int IdPrestamo FK
+    }
+
+    TB_Bien ||--o{ TB_FotoBien : "IdBien"
+    TB_Usuario ||--o{ TB_FotoBien : "UsuarioCarga"
+    TB_Bien ||--o{ TB_Foto : "IdBien"
+    TB_Bien ||--o{ TB_Documento : "IdBien"
+    TB_Movimiento ||--o{ TB_Documento : "IdMovimiento"
+    TB_Prestamo ||--o{ TB_Documento : "IdPrestamo"
+    TB_Documento ||--o{ TB_Firma : "IdDocumento"
+    TB_Bombero ||--o{ TB_Firma : "IdBombero"
+    TB_Bien ||--o{ TB_DocumentoGenerado : "IdBien"
+    TB_Movimiento ||--o{ TB_DocumentoGenerado : "IdMovimiento"
+    TB_Prestamo ||--o{ TB_DocumentoGenerado : "IdPrestamo"
+
+    %% ================= EMERGENCIAS Y ALERTAS =================
+    TB_ServicioEmergencia {
+        int IdServicio PK
+        int IdTipoEmergencia FK
+        int Responsable FK
+    }
+    TB_ServicioDetalle {
+        int IdDetalle PK
+        int IdServicio FK
+        int IdBien FK
+    }
+    TB_Alerta {
+        int IdAlerta PK
+        int IdBien FK
+    }
+
+    TB_TipoEmergencia ||--o{ TB_ServicioEmergencia : "IdTipoEmergencia"
+    TB_Bombero ||--o{ TB_ServicioEmergencia : "Responsable"
+    TB_ServicioEmergencia ||--o{ TB_ServicioDetalle : "IdServicio"
+    TB_Bien ||--o{ TB_ServicioDetalle : "IdBien"
+    TB_Bien ||--o{ TB_Alerta : "IdBien"
+```
+
+
 ## Tablas principales
 
 Seguridad y usuarios:
