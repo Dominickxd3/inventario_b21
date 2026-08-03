@@ -1,0 +1,21 @@
+node_modules/
+dist/
+build/
+coverage/
+
+# Secretos y configuración local
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
