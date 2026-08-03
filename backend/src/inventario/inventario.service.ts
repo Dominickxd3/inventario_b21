@@ -39,7 +39,7 @@ export class InventarioService {
   private async verificarBienExiste(idBien: number): Promise<void> {
     const fila = await ejecutarSql(() =>
       this.db.queryOne<{ Existe: number }>(
-        'SELECT 1 AS Existe FROM dbo.TB_Bien WHERE IdBien = @IdBien AND Eliminado = 0;',
+        'SELECT 1 AS Existe FROM dbo.TB_Bien WHERE IdBien = @IdBien AND ISNULL(Eliminado, 0) = 0;',
         { IdBien: idBien },
       ),
     );

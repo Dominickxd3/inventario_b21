@@ -7,6 +7,7 @@ import { RolesGuard } from './auth/guards/roles.guard';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
 import { InventarioModule } from './inventario/inventario.module';
+import { MantenimientoModule } from './mantenimiento/mantenimiento.module';
 import { MovimientosModule } from './movimientos/movimientos.module';
 import { RolesModule } from './roles/roles.module';
 import { UsuariosModule } from './usuarios/usuarios.module';
@@ -20,6 +21,7 @@ import { UsuariosModule } from './usuarios/usuarios.module';
     RolesModule,
     InventarioModule,
     MovimientosModule,
+    MantenimientoModule,
   ],
   providers: [
     // Guards globales: JWT -> Roles -> Permisos

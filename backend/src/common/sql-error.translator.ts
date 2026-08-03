@@ -47,11 +47,15 @@ export function traducirErrorSql(error: unknown): never {
     );
   }
 
-  if (texto.includes('no existe')) {
+  if (texto.includes('no existe') || texto.includes('no fue encontrado')) {
     throw new NotFoundException(mensaje);
   }
 
-  if (texto.includes('ya existe')) {
+  if (
+    texto.includes('ya existe') ||
+    texto.includes('ya fue') ||
+    texto.includes('ya se encuentra')
+  ) {
     throw new ConflictException(mensaje);
   }
 
@@ -61,6 +65,7 @@ export function traducirErrorSql(error: unknown): never {
     texto.includes('no es válida') ||
     texto.includes('no válido') ||
     texto.includes('no válida') ||
+    texto.includes('no son válidos') ||
     texto.includes('obligatorio')
   ) {
     throw new BadRequestException(mensaje);

@@ -243,7 +243,7 @@ BEGIN
     DECLARE @IdUbicacionAnterior INT;
     DECLARE @IdResponsableAnterior INT;
 
-    IF NOT EXISTS (SELECT 1 FROM dbo.TB_Bien WHERE IdBien = @IdBien AND Eliminado = 0)
+    IF NOT EXISTS (SELECT 1 FROM dbo.TB_Bien WHERE IdBien = @IdBien AND ISNULL(Eliminado, 0) = 0)
     BEGIN
         RAISERROR('El bien no existe o está eliminado.', 16, 1);
         RETURN;
@@ -379,7 +379,7 @@ BEGIN
     DECLARE @IdUbicacionAnterior INT;
     DECLARE @IdResponsableAnterior INT;
 
-    IF NOT EXISTS (SELECT 1 FROM dbo.TB_Bien WHERE IdBien = @IdBien AND Eliminado = 0)
+    IF NOT EXISTS (SELECT 1 FROM dbo.TB_Bien WHERE IdBien = @IdBien AND ISNULL(Eliminado, 0) = 0)
     BEGIN
         RAISERROR('El bien no existe o está eliminado.', 16, 1);
         RETURN;
@@ -651,7 +651,7 @@ BEGIN
     DECLARE @IdUbicacionAnterior INT;
     DECLARE @IdResponsableAnterior INT;
 
-    IF NOT EXISTS (SELECT 1 FROM dbo.TB_Bien WHERE IdBien = @IdBien AND Eliminado = 0)
+    IF NOT EXISTS (SELECT 1 FROM dbo.TB_Bien WHERE IdBien = @IdBien AND ISNULL(Eliminado, 0) = 0)
     BEGIN
         RAISERROR('El bien no existe o está eliminado.', 16, 1);
         RETURN;

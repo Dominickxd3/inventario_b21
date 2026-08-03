@@ -150,7 +150,7 @@ BEGIN
 
     SELECT A.IdArticulo, A.CodigoArticulo, A.NombreArticulo, A.Descripcion,
            A.TipoControl, A.Estado, A.FechaRegistro,
-           (SELECT COUNT(*) FROM dbo.TB_Bien B WHERE B.IdArticulo = A.IdArticulo AND B.Eliminado = 0) AS CantidadBienes
+           (SELECT COUNT(*) FROM dbo.TB_Bien B WHERE B.IdArticulo = A.IdArticulo AND ISNULL(B.Eliminado, 0) = 0) AS CantidadBienes
     FROM dbo.TB_Articulo A
     WHERE (@IncluirInactivos = 1 OR A.Estado = 1)
       AND (@Filtro IS NULL OR A.CodigoArticulo LIKE '%' + @Filtro + '%' OR A.NombreArticulo LIKE '%' + @Filtro + '%')
@@ -294,7 +294,7 @@ BEGIN
     JOIN dbo.TB_EstadoBien EST ON EST.IdEstado = B.IdEstado
     LEFT JOIN dbo.TB_Ubicacion UB ON UB.IdUbicacion = B.IdUbicacion
     LEFT JOIN dbo.TB_Bombero BO ON BO.IdBombero = B.IdResponsableActual
-    WHERE (@IncluirEliminados = 1 OR B.Eliminado = 0)
+    WHERE (@IncluirEliminados = 1 OR ISNULL(B.Eliminado, 0) = 0)
       AND (@Filtro IS NULL OR B.CodigoInterno LIKE '%' + @Filtro + '%'
            OR A.NombreArticulo LIKE '%' + @Filtro + '%'
            OR B.NumeroSerie LIKE '%' + @Filtro + '%')
@@ -308,7 +308,7 @@ BEGIN
     SELECT COUNT(*) AS Total
     FROM dbo.TB_Bien B
     JOIN dbo.TB_Articulo A ON A.IdArticulo = B.IdArticulo
-    WHERE (@IncluirEliminados = 1 OR B.Eliminado = 0)
+    WHERE (@IncluirEliminados = 1 OR ISNULL(B.Eliminado, 0) = 0)
       AND (@Filtro IS NULL OR B.CodigoInterno LIKE '%' + @Filtro + '%'
            OR A.NombreArticulo LIKE '%' + @Filtro + '%'
            OR B.NumeroSerie LIKE '%' + @Filtro + '%')
@@ -375,7 +375,7 @@ BEGIN
     JOIN dbo.TB_Bien CH ON CH.IdBien = BR.IdBienHijo
     JOIN dbo.TB_Articulo A ON A.IdArticulo = CH.IdArticulo
     WHERE BR.IdBienPadre = @IdBien
-      AND CH.Eliminado = 0;
+      AND ISNULL(CH.Eliminado, 0) = 0;
 
     -- 3) HISTORIAL DE ESTADO
     SELECT HE.IdHistorialEstado, HE.EstadoAnterior, EA.NombreEstado AS NombreEstadoAnterior,
@@ -445,7 +445,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF NOT EXISTS (SELECT 1 FROM dbo.TB_Bien WHERE IdBien = @IdBien AND Eliminado = 0)
+    IF NOT EXISTS (SELECT 1 FROM dbo.TB_Bien WHERE IdBien = @IdBien AND ISNULL(Eliminado, 0) = 0)
     BEGIN
         RAISERROR('El bien no existe o está eliminado.', 16, 1);
         RETURN;
