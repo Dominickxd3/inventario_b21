@@ -92,7 +92,15 @@ export class InventarioService {
   /* Bienes                                                             */
   /* ------------------------------------------------------------------ */
 
-  async listarBienes(filtro?: string, idArticulo?: number, idEstado?: number, idUbicacion?: number, idResponsableActual?: number) {
+  async listarBienes(
+    filtro?: string,
+    idArticulo?: number,
+    idEstado?: number,
+    idUbicacion?: number,
+    idResponsableActual?: number,
+    pagina = 1,
+    filas = 50,
+  ) {
     const result = await ejecutarSql(() =>
       this.db.execute('SP_ListarBienes', {
         Filtro: filtro ?? null,
@@ -100,9 +108,14 @@ export class InventarioService {
         IdEstado: idEstado ?? null,
         IdUbicacion: idUbicacion ?? null,
         IdResponsableActual: idResponsableActual ?? null,
+        Pagina: pagina,
+        Filas: filas,
       }),
     );
-    return result.recordset;
+    return {
+      data: result.recordset,
+      total: result.recordsets?.[1]?.[0]?.Total ?? 0,
+    };
   }
 
   async registrarBien(dto: RegistrarBienDto, idUsuario: number) {

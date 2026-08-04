@@ -73,6 +73,8 @@ export class InventarioController {
     @Query('idEstado') idEstado?: string,
     @Query('idUbicacion') idUbicacion?: string,
     @Query('idResponsable') idResponsableActual?: string,
+    @Query('pagina') pagina?: string,
+    @Query('filas') filas?: string,
   ) {
     return this.inventarioService.listarBienes(
       filtro,
@@ -80,6 +82,8 @@ export class InventarioController {
       this.aNumero(idEstado),
       this.aNumero(idUbicacion),
       this.aNumero(idResponsableActual),
+      this.aNumero(pagina) ?? 1,
+      this.aNumero(filas) ?? 50,
     );
   }
 
