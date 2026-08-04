@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useTransition, useState } from "react";
 import Link from "next/link";
 import {
   Box,
@@ -19,12 +19,14 @@ import PageHeader from "@/components/PageHeader";
 import DataTable from "@/components/DataTable";
 import ColumnasDialog from "@/components/ColumnasDialog";
 import { EstadoChip } from "@/utils/estados";
+import { B21StatusBadge } from "@/components/b21";
 import { formatearFechaCorta } from "@/utils/formato";
 import { usePermiso } from "@/hooks/usePermiso";
 import RegistrarBienDialog from "./RegistrarBienDialog";
 
 export default function InventarioPage() {
   const puedeRegistrar = usePermiso("Registrar bienes");
+  const [isPending, startTransition] = useTransition();
 
   const [datos, setDatos] = useState<ListadoPaginado<Bien>>({ data: [], total: 0 });
   const [catalogos, setCatalogos] = useState<Catalogos | null>(null);
@@ -32,6 +34,7 @@ export default function InventarioPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [filtro, setFiltro] = useState("");
+  const [filtroDebounced, setFiltroDebounced] = useState("");
   const [idEstado, setIdEstado] = useState("");
   const [idUbicacion, setIdUbicacion] = useState("");
   const [pagina, setPagina] = useState(0);
@@ -57,18 +60,25 @@ export default function InventarioPage() {
         pagina: pagina + 1,
         filas: filasPorPagina,
       };
-      if (filtro) params.filtro = filtro;
+      if (filtroDebounced) params.filtro = filtroDebounced;
       if (idEstado) params.idEstado = idEstado;
       if (idUbicacion) params.idUbicacion = idUbicacion;
       const res = await api.get<ListadoPaginado<Bien>>("/inventario/bienes", { params });
-      setDatos(res.data);
-      setError(null);
+      startTransition(() => {
+        setDatos(res.data);
+        setError(null);
+      });
     } catch (e) {
-      setError(obtenerMensajeError(e));
+      startTransition(() => setError(obtenerMensajeError(e)));
     } finally {
       setCargando(false);
     }
-  }, [filtro, idEstado, idUbicacion, pagina, filasPorPagina]);
+  }, [filtroDebounced, idEstado, idUbicacion, pagina, filasPorPagina]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setFiltroDebounced(filtro), 250);
+    return () => clearTimeout(timer);
+  }, [filtro]);
 
   useEffect(() => {
     cargar();
@@ -119,7 +129,7 @@ export default function InventarioPage() {
         id: "NombreEstado",
         header: "Estado",
         accessorFn: (b) => b.NombreEstado,
-        cell: (info) => <EstadoChip nombre={info.row.original.NombreEstado} />,
+        cell: (info) => <B21StatusBadge estado={info.row.original.NombreEstado} />,
       },
       {
         id: "NombreUbicacion",

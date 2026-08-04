@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -45,7 +45,7 @@ function alignCelda(meta: unknown): "left" | "right" | "center" | "inherit" {
   return "left";
 }
 
-export default function DataTable<T>({
+function DataTableImpl<T>({
   columnas,
   filas,
   cargando = false,
@@ -201,3 +201,5 @@ export default function DataTable<T>({
     </Paper>
   );
 }
+
+export default memo(DataTableImpl) as typeof DataTableImpl;

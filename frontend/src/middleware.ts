@@ -8,19 +8,12 @@ export function middleware(request: NextRequest) {
   const sesion = request.cookies.get(SESION_COOKIE)?.value;
 
   const esLogin = pathname === "/login";
-  const estaEnRutaProtegida = !esLogin && pathname !== "/_next" && !pathname.startsWith("/_next") && !pathname.startsWith("/favicon") && !pathname.startsWith("/isotipo");
+  const estaEnRutaProtegida = !esLogin && !pathname.startsWith("/api") && pathname !== "/_next" && !pathname.startsWith("/_next") && !pathname.startsWith("/favicon") && !pathname.startsWith("/isotipo");
 
   if (estaEnRutaProtegida && !sesion) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname);
-    return NextResponse.redirect(url);
-  }
-
-  if (esLogin && sesion) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    url.search = "";
     return NextResponse.redirect(url);
   }
 

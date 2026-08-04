@@ -16,10 +16,10 @@ import {
 } from "@mui/material";
 import { Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
+import { B21StatusBadge } from "@/components/b21";
 import { api, obtenerMensajeError } from "@/services/api";
 import type { ListadoPaginado, Prestamo } from "@/types";
 import { formatearFecha } from "@/utils/formato";
-import { EstadoTipo } from "@/utils/estados";
 
 export default function PrestamosPage() {
   const [datos, setDatos] = useState<ListadoPaginado<Prestamo>>({ data: [], total: 0 });
@@ -137,7 +137,7 @@ export default function PrestamosPage() {
                     <TableCell sx={{ whiteSpace: "nowrap" }}>{p.FechaDevolucionProgramada ? formatearFecha(p.FechaDevolucionProgramada) : "—"}</TableCell>
                     <TableCell sx={{ whiteSpace: "nowrap" }}>{p.FechaDevolucionReal ? formatearFecha(p.FechaDevolucionReal) : "—"}</TableCell>
                     <TableCell>
-                      <EstadoTipo tipo={p.Estado} />
+                      <B21StatusBadge estado={p.Estado} />
                     </TableCell>
                   </TableRow>
                 ))

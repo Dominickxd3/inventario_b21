@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import type { UsuarioAutenticado } from "@/types";
 
 interface AuthState {
@@ -43,6 +43,11 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "b21-auth",
+      storage: createJSONStorage(() => {
+        if (typeof window !== "undefined") return window.localStorage;
+        const nada = () => {};
+        return { getItem: () => null, setItem: nada, removeItem: nada } as unknown as Storage;
+      }),
     },
   ),
 );

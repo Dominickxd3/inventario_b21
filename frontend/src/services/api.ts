@@ -37,6 +37,7 @@ export function cerrarSesion() {
   if (typeof window === "undefined") return;
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(SESION_KEY);
+  document.cookie = "b21-auth=; path=/; max-age=0; SameSite=Lax";
 }
 
 api.interceptors.request.use((config) => {

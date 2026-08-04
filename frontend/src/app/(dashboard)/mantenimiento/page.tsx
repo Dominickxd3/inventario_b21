@@ -16,10 +16,10 @@ import {
 } from "@mui/material";
 import { Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
+import { B21StatusBadge } from "@/components/b21";
 import { api, obtenerMensajeError } from "@/services/api";
 import type { ListadoPaginado, Mantenimiento } from "@/types";
 import { formatearFecha, formatearMoneda } from "@/utils/formato";
-import { EstadoTipo } from "@/utils/estados";
 
 export default function MantenimientoPage() {
   const [datos, setDatos] = useState<ListadoPaginado<Mantenimiento>>({ data: [], total: 0 });
@@ -134,7 +134,7 @@ export default function MantenimientoPage() {
                     <TableCell sx={{ whiteSpace: "nowrap" }}>{m.FechaFin ? formatearFecha(m.FechaFin) : "—"}</TableCell>
                     <TableCell>{m.Costo != null ? formatearMoneda(m.Costo) : "—"}</TableCell>
                     <TableCell>
-                      <EstadoTipo tipo={m.Estado} />
+                      <B21StatusBadge estado={m.Estado} />
                     </TableCell>
                     <TableCell>{m.Responsable ?? "—"}</TableCell>
                   </TableRow>

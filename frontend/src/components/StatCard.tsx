@@ -1,7 +1,7 @@
-import type { ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 import { TrendingUp, TrendingDown } from "lucide-react";
 
-export default function StatCard({
+function StatCard({
   label,
   valor,
   icono,
@@ -77,3 +77,5 @@ export default function StatCard({
     </div>
   );
 }
+
+export default memo(StatCard);

@@ -1,6 +1,6 @@
-import type { ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 
-export default function PageHeader({
+function PageHeader({
   titulo,
   subtitulo,
   acciones,
@@ -42,3 +42,5 @@ export default function PageHeader({
     </div>
   );
 }
+
+export default memo(PageHeader);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useTransition, useState } from "react";
 import {
   Box,
   TextField,
@@ -12,6 +12,7 @@ import {
   TableCell,
   TableContainer,
   TableHead,
+  TablePagination,
   TableRow,
   Paper,
   Button,
@@ -22,10 +23,10 @@ import {
 } from "@mui/material";
 import { Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
+import { B21StatusBadge } from "@/components/b21";
 import { api, obtenerMensajeError } from "@/services/api";
 import type { ListadoPaginado, Movimiento, Catalogos } from "@/types";
 import { formatearFecha } from "@/utils/formato";
-import { EstadoTipo } from "@/utils/estados";
 
 export default function MovimientosPage() {
   const [datos, setDatos] = useState<ListadoPaginado<Movimiento>>({ data: [], total: 0 });
@@ -33,25 +34,34 @@ export default function MovimientosPage() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filtro, setFiltro] = useState("");
+  const [filtroDebounced, setFiltroDebounced] = useState("");
   const [tipo, setTipo] = useState("");
   const [pagina, setPagina] = useState(0);
-  const [filas] = useState(15);
+  const [filas, setFilas] = useState(15);
   const [fichaMov, setFichaMov] = useState<{ cabecera: Record<string, unknown>; detalle: Record<string, unknown>[] } | null>(null);
+  const [isPending, startTransition] = useTransition();
   const cargar = useCallback(async () => {
     setCargando(true);
     try {
       const params: Record<string, string | number> = { pagina: pagina + 1, filas };
-      if (filtro) params.filtro = filtro;
+      if (filtroDebounced) params.filtro = filtroDebounced;
       if (tipo) params.idTipoMovimiento = tipo;
       const res = await api.get<ListadoPaginado<Movimiento>>("/movimientos", { params });
-      setDatos(res.data);
-      setError(null);
+      startTransition(() => {
+        setDatos(res.data);
+        setError(null);
+      });
     } catch (e) {
-      setError(obtenerMensajeError(e));
+      startTransition(() => setError(obtenerMensajeError(e)));
     } finally {
       setCargando(false);
     }
-  }, [filtro, tipo, pagina, filas]);
+  }, [filtroDebounced, tipo, pagina, filas]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setFiltroDebounced(filtro), 250);
+    return () => clearTimeout(timer);
+  }, [filtro]);
 
   useEffect(() => {
     cargar();
@@ -132,12 +142,21 @@ export default function MovimientosPage() {
           <Table size="small" sx={{ minWidth: 820 }}>
             <TableHead>
               <TableRow sx={{ backgroundColor: "#F1F2F5" }}>
-                {["Código", "Movimiento", "Fecha", "Bien", "Artículo", "Estado", "", ""].map((h) => (
+                {[
+                  { id: "codigo", label: "Código" },
+                  { id: "movimiento", label: "Movimiento" },
+                  { id: "fecha", label: "Fecha" },
+                  { id: "bien", label: "Bien" },
+                  { id: "articulo", label: "Artículo" },
+                  { id: "estado", label: "Estado" },
+                  { id: "obs", label: "Observación" },
+                  { id: "acciones", label: "" },
+                ].map((h) => (
                   <TableCell
-                    key={h}
+                    key={h.id}
                     sx={{ fontWeight: 600, fontSize: "0.72rem", textTransform: "uppercase", color: "#374151" }}
                   >
-                    {h}
+                    {h.label}
                   </TableCell>
                 ))}
               </TableRow>
@@ -166,7 +185,7 @@ export default function MovimientosPage() {
                     <TableCell sx={{ fontFamily: "Consolas, monospace" }}>{m.CodigoInterno ?? "—"}</TableCell>
                     <TableCell>{m.NombreArticulo ?? "—"}</TableCell>
                     <TableCell>
-                      <EstadoTipo tipo={m.Estado ?? undefined} />
+                      <B21StatusBadge estado={m.Estado ?? undefined} />
                     </TableCell>
                     <TableCell sx={{ maxWidth: 200 }}>
                       <Typography
@@ -196,8 +215,21 @@ export default function MovimientosPage() {
             </TableBody>
           </Table>
         </TableContainer>
-        <Box sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, display: "flex", justifyContent: "flex-end", fontSize: "0.78rem", color: "#6B7280" }}>
-          {datos.total} movimientos
+        <Box sx={{ borderTop: "1px solid", borderColor: "divider" }}>
+          <TablePagination
+            component="div"
+            count={datos.total}
+            page={pagina}
+            rowsPerPage={filas}
+            rowsPerPageOptions={[15, 25, 50, 100]}
+            onPageChange={(_, p) => setPagina(p)}
+            onRowsPerPageChange={(e) => {
+              setFilas(Number(e.target.value));
+              setPagina(0);
+            }}
+            labelRowsPerPage="Filas por página"
+            labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count}`}
+          />
         </Box>
       </Paper>
 
