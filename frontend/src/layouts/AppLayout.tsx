@@ -2,12 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { Box, Typography } from "@mui/material";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Clock } from "lucide-react";
 import B21Sidebar from "@/components/b21/B21Sidebar";
 import { useAuthStore } from "@/store/auth";
 
+function formatearFechaAcceso(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+}
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { usuario } = useAuthStore();
+  const { usuario, ultimoAcceso } = useAuthStore();
   const [montado, setMontado] = useState(false);
 
   useEffect(() => {
@@ -19,7 +30,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <B21Sidebar />
 
       <Box sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-        {/* Header superior */}
+        {/* Header institucional */}
         <Box
           component="header"
           sx={{
@@ -35,39 +46,52 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             zIndex: 10,
           }}
         >
-          <Typography sx={{ fontSize: "0.76rem", color: "#6B7280", fontWeight: 500, letterSpacing: "0.02em" }}>
-            Compañía de Bomberos Rímac N°21 — Sistema de Gestión Patrimonial
+          <Typography
+            sx={{
+              fontSize: "0.76rem",
+              color: "#6B7280",
+              fontWeight: 500,
+              letterSpacing: "0.02em",
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <Box
+              sx={{
+                width: 3,
+                height: 16,
+                borderRadius: 2,
+                bgcolor: "#8B0000",
+              }}
+            />
+            RÍMAC N°21 — Centro de Control Patrimonial — Gestión de Activos y Trazabilidad Operativa
           </Typography>
           {montado && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-              <ShieldCheck size={14} style={{ color: "#8B0000" }} />
-              <Typography sx={{ fontSize: "0.78rem", fontWeight: 600, color: "#374151" }}>
-                {usuario?.nombreCompleto}
-              </Typography>
-              <Box
-                sx={{
-                  fontSize: "0.65rem",
-                  fontWeight: 600,
-                  color: "#8B0000",
-                  bgcolor: "#FEF2F2",
-                  px: 1.2,
-                  py: 0.3,
-                  borderRadius: 1,
-                  letterSpacing: "0.03em",
-                }}
-              >
-                {usuario?.rol ?? "Sesión activa"}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "#9CA3AF", fontSize: "0.7rem" }}>
+                <Clock size={13} />
+                <span>Último acceso: {formatearFechaAcceso(ultimoAcceso)}</span>
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <ShieldCheck size={14} style={{ color: "#C8A951" }} />
+                <Box>
+                  <Typography sx={{ fontSize: "0.78rem", fontWeight: 700, color: "#374151", lineHeight: 1.2 }}>
+                    {usuario?.nombreCompleto}
+                  </Typography>
+                  <Typography sx={{ fontSize: "0.62rem", fontWeight: 600, color: "#8B0000", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                    {usuario?.rol ?? "Sesión activa"}
+                  </Typography>
+                </Box>
               </Box>
             </Box>
           )}
         </Box>
 
-        {/* Contenido */}
         <Box component="main" sx={{ px: 3, py: 3, flex: 1 }}>
           {children}
         </Box>
 
-        {/* Footer */}
         <Box
           component="footer"
           sx={{

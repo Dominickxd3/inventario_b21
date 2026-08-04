@@ -39,7 +39,7 @@ export default function MovimientosPage() {
   const [pagina, setPagina] = useState(0);
   const [filas, setFilas] = useState(15);
   const [fichaMov, setFichaMov] = useState<{ cabecera: Record<string, unknown>; detalle: Record<string, unknown>[] } | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const cargar = useCallback(async () => {
     setCargando(true);
     try {

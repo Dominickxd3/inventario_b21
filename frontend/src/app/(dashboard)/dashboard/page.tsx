@@ -1,36 +1,38 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useCallback, useEffect, useState } from "react";
-import { Box, CircularProgress, Typography, Paper } from "@mui/material";
+import { Box, CircularProgress, Paper, Typography } from "@mui/material";
 import {
-  LayoutDashboard,
   CheckCircle2,
   Wrench,
   Handshake,
   AlertTriangle,
-  ArrowRightLeft,
-  Clock,
+  Shield,
 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { api } from "@/services/api";
-import B21MetricCard from "@/components/b21/B21MetricCard";
 import B21EmptyState from "@/components/b21/B21EmptyState";
-
-const PIE_COLORS = ["#1B5E20", "#E65100", "#B71C1C", "#0D47A1", "#546E7A"];
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import MetricCard from "@/components/dashboard/MetricCard";
+import AssetHealthChart from "@/components/dashboard/AssetHealthChart";
+import OperationalAlerts from "@/components/dashboard/OperationalAlerts";
+import RecentActivityTimeline from "@/components/dashboard/RecentActivityTimeline";
+import AssetStatusWidget from "@/components/dashboard/AssetStatusWidget";
+import MovementSummaryChart from "@/components/dashboard/MovementSummaryChart";
 
 export default function DashboardPage() {
-  const [datos, setDatos] = useState<{
-    resumen: Record<string, number> | null;
-    estados: { Estado: string; Cantidad: number }[];
-    movimientosPorMes: { Anio: number; Mes: number; CantidadMovimientos: number }[];
-    mantenimientosPorMes: { Anio: number; Mes: number; Cantidad: number }[];
-  } | null>(null);
+  const [datos, setDatos] = useState<any>(null);
+  const [movs, setMovs] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
 
   const cargar = useCallback(async () => {
     try {
-      const res = await api.get("/reportes/dashboard");
-      setDatos(res.data);
+      const [dash, mov] = await Promise.all([
+        api.get("/reportes/dashboard"),
+        api.get("/movimientos?pagina=1&filas=5"),
+      ]);
+      setDatos(dash.data);
+      setMovs(mov.data.data ?? []);
     } catch {
       setDatos(null);
     } finally {
@@ -41,183 +43,87 @@ export default function DashboardPage() {
   useEffect(() => { cargar(); }, [cargar]);
 
   if (cargando) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", py: 12 }}>
-        <CircularProgress size={36} sx={{ color: "#8B0000" }} />
-      </Box>
-    );
+    return <Box sx={{ display: "flex", justifyContent: "center", py: 12 }}><CircularProgress size={36} sx={{ color: "#8B0000" }} /></Box>;
   }
-
-  if (!datos || !datos.resumen) {
+  if (!datos?.resumen) {
     return <B21EmptyState titulo="No se pudieron cargar los indicadores" descripcion="Verifique la conexión con el servidor." />;
   }
 
   const r = datos.resumen;
+  const total = r.TotalBienes ?? 0;
+  const alertas = (r.SinResponsable ?? 0) + (r.EnMantenimiento ?? 0) + (r.PrestamosActivos ?? 0);
+
+  const tiposMov = (datos.movimientosPorMes ?? []).reduce((acc: any, m: any) => {
+    const tipo = m.Tipo ?? "Movimiento";
+    acc[tipo] = (acc[tipo] || 0) + m.CantidadMovimientos;
+    return acc;
+  }, {});
+  const datosTipos = Object.entries(tiposMov).map(([tipo, cantidad]: any) => ({ tipo, cantidad }));
 
   return (
     <Box>
-      {/* Header */}
-      <Box sx={{ mb: 3 }}>
-        <Typography sx={{ fontSize: "1.4rem", fontWeight: 800, color: "#111827", letterSpacing: "-0.02em" }}>
-          Centro de Control B21
-        </Typography>
-        <Typography sx={{ fontSize: "0.82rem", color: "#6B7280", mt: 0.3 }}>
-          Visión operativa del patrimonio institucional
-        </Typography>
+      <DashboardHeader />
+
+      {/* SECCIÓN 2: KPIs */}
+      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 2, mb: 3 }}>
+        <MetricCard label="Activos Totales" valor={total} icono={<Shield size={20} />} tono="#8B0000" detalle="Bienes registrados" />
+        <MetricCard label="Activos Operativos" valor={r.Operativos ?? 0} icono={<CheckCircle2 size={20} />} tono="#1B5E20" detalle="Disponibles para servicio" />
+        <MetricCard label="En Mantenimiento" valor={r.EnMantenimiento ?? 0} icono={<Wrench size={20} />} tono="#E65100" detalle="Equipos intervenidos" />
+        <MetricCard label="Prestados" valor={r.PrestamosActivos ?? 0} icono={<Handshake size={20} />} tono="#0D47A1" detalle="Asignación temporal" />
+        <MetricCard label="Alertas" valor={alertas} icono={<AlertTriangle size={20} />} tono="#B71C1C" detalle="Requieren atención" />
       </Box>
 
-      {/* Tarjetas métricas */}
-      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))", gap: 2, mb: 3 }}>
-        <B21MetricCard
-          label="Total Activos"
-          valor={r.TotalBienes ?? 0}
-          icono={<LayoutDashboard size={18} />}
-          tono="#8B0000"
-          detalle="Bienes registrados"
-        />
-        <B21MetricCard
-          label="Operativos"
-          valor={r.Operativos ?? 0}
-          icono={<CheckCircle2 size={18} />}
-          tono="#1B5E20"
-          detalle="Disponibles para servicio"
-        />
-        <B21MetricCard
-          label="En Mantenimiento"
-          valor={r.EnMantenimiento ?? 0}
-          icono={<Wrench size={18} />}
-          tono="#E65100"
-          detalle="Equipos en intervención"
-        />
-        <B21MetricCard
-          label="Prestados"
-          valor={r.PrestamosActivos ?? 0}
-          icono={<Handshake size={18} />}
-          tono="#0D47A1"
-          detalle="Asignados temporalmente"
-        />
-        <B21MetricCard
-          label="Sin responsable"
-          valor={r.SinResponsable ?? 0}
-          icono={<AlertTriangle size={18} />}
-          tono="#B71C1C"
-          detalle="Requieren asignación"
-        />
+      {/* SECCIÓN 3: Salud del Patrimonio */}
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 320px" }, gap: 2, mb: 3 }}>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: "1px solid rgba(0,0,0,0.06)" }}>
+          <Typography sx={{ fontWeight: 700, fontSize: "0.88rem", mb: 1, color: "#111827", letterSpacing: "-0.01em" }}>
+            Estado del Patrimonio
+          </Typography>
+          {datos.estados?.length > 0 ? (
+            <AssetHealthChart data={datos.estados} />
+          ) : (
+            <B21EmptyState titulo="Sin datos" />
+          )}
+        </Paper>
+        <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, border: "1px solid rgba(0,0,0,0.06)", bgcolor: "#FFFBF5" }}>
+          <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#E65100", mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
+            <AlertTriangle size={15} />
+            Alertas Operativas
+          </Typography>
+          <OperationalAlerts
+            sinResponsable={r.SinResponsable ?? 0}
+            enMantenimiento={r.EnMantenimiento ?? 0}
+            prestamosActivos={r.PrestamosActivos ?? 0}
+            dadosBaja={r.DadosBaja ?? 0}
+          />
+        </Paper>
       </Box>
 
-      {/* Gráficos */}
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2, mb: 3 }}>
-        {/* Estado de activos */}
-        <Paper
-          elevation={0}
-          sx={{ p: 3, borderRadius: 3, border: "1px solid rgba(0,0,0,0.06)" }}
-        >
-          <Typography sx={{ fontWeight: 700, fontSize: "0.88rem", mb: 2, color: "#111827", letterSpacing: "-0.01em" }}>
+      {/* SECCIÓN 4: Actividad Reciente */}
+      <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, border: "1px solid rgba(0,0,0,0.06)", mb: 3 }}>
+        <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#6B7280", mb: 2 }}>
+          Actividad Reciente
+        </Typography>
+        <RecentActivityTimeline movimientos={movs} />
+      </Paper>
+
+      {/* SECCIÓN 5: Análisis Operativo */}
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
+        <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, border: "1px solid rgba(0,0,0,0.06)" }}>
+          <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#6B7280", mb: 2 }}>
             Estado de Activos
           </Typography>
-          {datos.estados.length === 0 ? (
-            <B21EmptyState titulo="Sin datos de estados" />
-          ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={datos.estados}
-                  dataKey="Cantidad"
-                  nameKey="Estado"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  innerRadius={45}
-                >
-                  {datos.estados.map((_, i) => (
-                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#fff",
-                    border: "1px solid #E5E7EB",
-                    borderRadius: 8,
-                    fontSize: "0.8rem",
-                    fontWeight: 600,
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
+          <AssetStatusWidget estados={datos.estados ?? []} total={total} />
         </Paper>
-
-        {/* Movimientos por mes */}
-        <Paper
-          elevation={0}
-          sx={{ p: 3, borderRadius: 3, border: "1px solid rgba(0,0,0,0.06)" }}
-        >
-          <Typography sx={{ fontWeight: 700, fontSize: "0.88rem", mb: 2, color: "#111827", letterSpacing: "-0.01em" }}>
-            Movimientos Mensuales
+        <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, border: "1px solid rgba(0,0,0,0.06)" }}>
+          <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#6B7280", mb: 1 }}>
+            Movimientos del Período
           </Typography>
-          {datos.movimientosPorMes.length === 0 ? (
-            <B21EmptyState titulo="Sin movimientos registrados" />
+          {datosTipos.length > 0 ? (
+            <MovementSummaryChart data={datosTipos} />
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart
-                data={datos.movimientosPorMes.map((m) => ({
-                  mes: `${m.Mes.toString().padStart(2, "0")}/${m.Anio}`,
-                  cantidad: m.CantidadMovimientos,
-                }))}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#F1F2F5" />
-                <XAxis dataKey="mes" tick={{ fontSize: 11, fill: "#9CA3AF" }} />
-                <YAxis tick={{ fontSize: 11, fill: "#9CA3AF" }} allowDecimals={false} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#fff",
-                    border: "1px solid #E5E7EB",
-                    borderRadius: 8,
-                    fontSize: "0.8rem",
-                    fontWeight: 600,
-                  }}
-                />
-                <Bar dataKey="cantidad" fill="#8B0000" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <B21EmptyState titulo="Sin datos" />
           )}
-        </Paper>
-      </Box>
-
-      {/* Últimos indicadores */}
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" }, gap: 2 }}>
-        <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, border: "1px solid rgba(0,0,0,0.06)", display: "flex", alignItems: "center", gap: 2 }}>
-          <Clock size={22} style={{ color: "#6B7280" }} />
-          <Box>
-            <Typography sx={{ fontSize: "1.2rem", fontWeight: 800, color: "#111827" }}>
-              {r.DadosBaja ?? 0}
-            </Typography>
-            <Typography sx={{ fontSize: "0.7rem", fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Dados de Baja
-            </Typography>
-          </Box>
-        </Paper>
-        <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, border: "1px solid rgba(0,0,0,0.06)", display: "flex", alignItems: "center", gap: 2 }}>
-          <ArrowRightLeft size={22} style={{ color: "#6B7280" }} />
-          <Box>
-            <Typography sx={{ fontSize: "1.2rem", fontWeight: 800, color: "#111827" }}>
-              {datos.movimientosPorMes.reduce((a, m) => a + m.CantidadMovimientos, 0)}
-            </Typography>
-            <Typography sx={{ fontSize: "0.7rem", fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Movimientos Totales
-            </Typography>
-          </Box>
-        </Paper>
-        <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, border: "1px solid rgba(0,0,0,0.06)", display: "flex", alignItems: "center", gap: 2 }}>
-          <Wrench size={22} style={{ color: "#6B7280" }} />
-          <Box>
-            <Typography sx={{ fontSize: "1.2rem", fontWeight: 800, color: "#111827" }}>
-              {datos.mantenimientosPorMes.reduce((a, m) => a + m.Cantidad, 0)}
-            </Typography>
-            <Typography sx={{ fontSize: "0.7rem", fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Mantenimientos Totales
-            </Typography>
-          </Box>
         </Paper>
       </Box>
     </Box>

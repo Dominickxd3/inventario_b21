@@ -9,6 +9,7 @@ interface AuthState {
   login: (usuario: UsuarioAutenticado) => void;
   logout: () => void;
   tienePermiso: (permiso: string) => boolean;
+  ultimoAcceso: string | null;
 }
 
 const COOKIE = "b21-auth";
@@ -26,13 +27,14 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       usuario: null,
+      ultimoAcceso: null,
       login: (usuario) => {
         sincronizarCookie(true);
-        set({ usuario });
+        set({ usuario, ultimoAcceso: new Date().toISOString() });
       },
       logout: () => {
         sincronizarCookie(false);
-        set({ usuario: null });
+        set({ usuario: null, ultimoAcceso: null });
       },
       tienePermiso: (permiso) => {
         const u = get().usuario;

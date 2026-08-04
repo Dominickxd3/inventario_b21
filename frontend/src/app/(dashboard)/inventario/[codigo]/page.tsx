@@ -30,7 +30,6 @@ import {
   QrCode,
   Camera,
   FileText,
-  Wrench,
   History,
 } from "lucide-react";
 import { api, obtenerMensajeError } from "@/services/api";

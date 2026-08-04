@@ -126,14 +126,14 @@ export default function B21Sidebar() {
             </Typography>
             <Typography
               sx={{
-                fontSize: "0.58rem",
+                fontSize: "0.56rem",
                 letterSpacing: "0.14em",
                 color: "#C8A951",
                 fontWeight: 700,
                 textTransform: "uppercase",
               }}
             >
-              Gestión Patrimonial
+              Asset Management System
             </Typography>
           </Box>
         )}

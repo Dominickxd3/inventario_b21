@@ -18,7 +18,6 @@ import type { Bien, Catalogos, ListadoPaginado } from "@/types";
 import PageHeader from "@/components/PageHeader";
 import DataTable from "@/components/DataTable";
 import ColumnasDialog from "@/components/ColumnasDialog";
-import { EstadoChip } from "@/utils/estados";
 import { B21StatusBadge } from "@/components/b21";
 import { formatearFechaCorta } from "@/utils/formato";
 import { usePermiso } from "@/hooks/usePermiso";
@@ -26,7 +25,7 @@ import RegistrarBienDialog from "./RegistrarBienDialog";
 
 export default function InventarioPage() {
   const puedeRegistrar = usePermiso("Registrar bienes");
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const [datos, setDatos] = useState<ListadoPaginado<Bien>>({ data: [], total: 0 });
   const [catalogos, setCatalogos] = useState<Catalogos | null>(null);
