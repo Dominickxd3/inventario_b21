@@ -1,32 +1,40 @@
-/** Formatea fechas ISO a DD/MM/AAAA HH:mm (hora local). */
+import dayjs from "dayjs";
+import "dayjs/locale/es";
+
+dayjs.locale("es");
+
 export function formatearFecha(fecha?: string | null): string {
-  if (!fecha) return '—';
-  const d = new Date(fecha);
-  if (Number.isNaN(d.getTime())) return fecha;
-  return d.toLocaleString('es-PE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  if (!fecha) return "—";
+  const d = dayjs(fecha);
+  if (!d.isValid()) return "—";
+  return d.format("DD/MM/YYYY HH:mm");
 }
 
 export function formatearFechaCorta(fecha?: string | null): string {
-  if (!fecha) return '—';
-  const d = new Date(fecha);
-  if (Number.isNaN(d.getTime())) return fecha;
-  return d.toLocaleDateString('es-PE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
+  if (!fecha) return "—";
+  const d = dayjs(fecha);
+  if (!d.isValid()) return "—";
+  return d.format("DD/MM/YYYY");
 }
 
 export function formatearMoneda(valor?: number | null): string {
-  if (valor === null || valor === undefined) return '—';
-  return valor.toLocaleString('es-PE', {
-    style: 'currency',
-    currency: 'PEN',
-  });
+  if (valor === null || valor === undefined || Number.isNaN(valor)) return "—";
+  return new Intl.NumberFormat("es-PE", {
+    style: "currency",
+    currency: "PEN",
+    minimumFractionDigits: 2,
+  }).format(valor);
+}
+
+export function mesNombre(mes: number): string {
+  const nombres = [
+    "Ene", "Feb", "Mar", "Abr", "May", "Jun",
+    "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
+  ];
+  return nombres[mes - 1] ?? mes.toString();
+}
+
+export function texto(valor: unknown): string {
+  if (valor === null || valor === undefined) return "—";
+  return String(valor);
 }

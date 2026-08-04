@@ -1,7 +1,17 @@
-import { useEffect, useState, type ReactNode } from 'react';
+"use client";
+
+import { useState } from "react";
 import {
-  Box,
-  CircularProgress,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  getPaginationRowModel,
+  useReactTable,
+  type SortingState,
+  type ColumnDef,
+} from "@tanstack/react-table";
+import {
+  Paper,
   Table,
   TableBody,
   TableCell,
@@ -9,19 +19,13 @@ import {
   TableHead,
   TablePagination,
   TableRow,
-  Paper,
-} from '@mui/material';
-
-interface Columna<T> {
-  key: string;
-  label: string;
-  align?: 'left' | 'right' | 'center';
-  minWidth?: number;
-  render?: (fila: T) => ReactNode;
-}
+  CircularProgress,
+  Box,
+} from "@mui/material";
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 interface Props<T> {
-  columnas: Columna<T>[];
+  columnas: ColumnDef<T, unknown>[];
   filas: T[];
   cargando?: boolean;
   total?: number;
@@ -29,8 +33,16 @@ interface Props<T> {
   filasPorPagina?: number;
   onCambiarPagina?: (pagina: number) => void;
   onCambiarFilasPorPagina?: (filas: number) => void;
+  paginacionCliente?: boolean;
   emptyMessage?: string;
   getRowId?: (fila: T) => number | string;
+  onFilaClick?: (fila: T) => void;
+}
+
+function alignCelda(meta: unknown): "left" | "right" | "center" | "inherit" {
+  const a = (meta as { align?: string } | undefined)?.align;
+  if (a === "right" || a === "center" || a === "inherit") return a;
+  return "left";
 }
 
 export default function DataTable<T>({
@@ -42,53 +54,73 @@ export default function DataTable<T>({
   filasPorPagina = 10,
   onCambiarPagina,
   onCambiarFilasPorPagina,
-  emptyMessage = 'No hay registros.',
+  paginacionCliente = false,
+  emptyMessage = "No hay registros.",
   getRowId,
+  onFilaClick,
 }: Props<T>) {
-  const [page, setPage] = useState(pagina);
-  const [rows, setRows] = useState(filasPorPagina);
+  const [sorting, setSorting] = useState<SortingState>([]);
 
-  useEffect(() => setPage(pagina), [pagina]);
+  const table = useReactTable({
+    data: filas,
+    columns: columnas,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: paginacionCliente ? getPaginationRowModel() : undefined,
+    initialState: {
+      pagination: { pageSize: paginacionCliente ? filasPorPagina : 50 },
+    },
+  });
 
-  const cambiarPagina = (_: unknown, nuevaPagina: number) => {
-    setPage(nuevaPagina);
-    onCambiarPagina?.(nuevaPagina);
-  };
-
-  const cambiarFilas = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = parseInt(e.target.value, 10);
-    setRows(v);
-    onCambiarFilasPorPagina?.(v);
-  };
+  const filasVisibles = paginacionCliente ? table.getRowModel().rows : table.getRowModel().rows;
 
   return (
     <Paper
       elevation={0}
-      sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}
+      sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2, overflow: "hidden" }}
     >
       <TableContainer>
-        <Table size="small" sx={{ minWidth: 720 }}>
+        <Table size="small" sx={{ minWidth: 760 }}>
           <TableHead>
-            <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
-              {columnas.map((c) => (
-                <TableCell
-                  key={c.key}
-                  align={c.align ?? 'left'}
-                  sx={{
-                    fontWeight: 600,
-                    fontSize: '0.72rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                    color: '#5c6470',
-                    whiteSpace: 'nowrap',
-                    minWidth: c.minWidth,
-                    py: 1.2,
-                  }}
-                >
-                  {c.label}
-                </TableCell>
-              ))}
-            </TableRow>
+            {table.getHeaderGroups().map((hg) => (
+              <TableRow key={hg.id} sx={{ backgroundColor: "#F1F2F5" }}>
+                {hg.headers.map((h) => {
+                  const ordenable = h.column.getCanSort();
+                  const sorted = h.column.getIsSorted();
+                  return (
+                    <TableCell
+                      key={h.id}
+                      align={alignCelda(h.column.columnDef.meta)}
+                      onClick={ordenable ? h.column.getToggleSortingHandler() : undefined}
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: "0.72rem",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
+                        color: "#374151",
+                        whiteSpace: "nowrap",
+                        cursor: ordenable ? "pointer" : "default",
+                        userSelect: "none",
+                      }}
+                    >
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        {flexRender(h.column.columnDef.header, h.getContext())}
+                        {ordenable &&
+                          (sorted === "asc" ? (
+                            <ArrowUp size={13} />
+                          ) : sorted === "desc" ? (
+                            <ArrowDown size={13} />
+                          ) : (
+                            <ArrowUpDown size={13} style={{ opacity: 0.4 }} />
+                          ))}
+                      </span>
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            ))}
           </TableHead>
           <TableBody>
             {cargando ? (
@@ -97,49 +129,75 @@ export default function DataTable<T>({
                   <CircularProgress size={28} />
                 </TableCell>
               </TableRow>
-            ) : filas.length === 0 ? (
+            ) : filasVisibles.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={columnas.length} align="center" sx={{ py: 8, color: '#5c6470' }}>
+                <TableCell colSpan={columnas.length} align="center" sx={{ py: 8, color: "#5c6470" }}>
                   {emptyMessage}
                 </TableCell>
               </TableRow>
             ) : (
-              filas.map((fila, i) => (
-                <TableRow
-                  key={getRowId ? getRowId(fila) : i}
-                  hover
-                  sx={{ '&:last-child td': { borderBottom: 0 } }}
-                >
-                  {columnas.map((c) => (
-                    <TableCell
-                      key={c.key}
-                      align={c.align ?? 'left'}
-                      sx={{ fontSize: '0.82rem', py: 1, whiteSpace: 'nowrap' }}
-                    >
-                      {c.render ? c.render(fila) : (fila as Record<string, unknown>)[c.key] as ReactNode}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              filasVisibles.map((fila, i) => {
+                const f = fila.original as T;
+                return (
+                  <TableRow
+                    key={getRowId ? getRowId(f) : i}
+                    hover
+                    onClick={onFilaClick ? () => onFilaClick(f) : undefined}
+                    sx={{
+                      cursor: onFilaClick ? "pointer" : "default",
+                      "&:last-child td": { borderBottom: 0 },
+                    }}
+                  >
+                    {fila.getVisibleCells().map((c) => (
+                      <TableCell
+                        key={c.id}
+                        align={alignCelda(c.column.columnDef.meta)}
+                        sx={{ fontSize: "0.82rem", py: 1, whiteSpace: "nowrap" }}
+                      >
+                        {flexRender(c.column.columnDef.cell, c.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
       </TableContainer>
-      <Box sx={{ borderTop: '1px solid', borderColor: 'divider' }}>
-        <TablePagination
-          component="div"
-          count={total}
-          page={page}
-          rowsPerPage={rows}
-          rowsPerPageOptions={[10, 25, 50]}
-          onPageChange={cambiarPagina}
-          onRowsPerPageChange={cambiarFilas}
-          labelRowsPerPage="Filas por página"
-          labelDisplayedRows={({ from, to, count }) =>
-            `${from}–${to} de ${count}`
-          }
-        />
-      </Box>
+
+      {paginacionCliente && !cargando && (
+        <Box sx={{ borderTop: "1px solid", borderColor: "divider" }}>
+          <TablePagination
+            component="div"
+            count={table.getFilteredRowModel().rows.length}
+            page={table.getState().pagination.pageIndex}
+            rowsPerPage={table.getState().pagination.pageSize}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            onPageChange={(_, p) => table.setPageIndex(p)}
+            onRowsPerPageChange={(e) => table.setPageSize(Number(e.target.value))}
+            labelRowsPerPage="Filas por página"
+            labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count}`}
+          />
+        </Box>
+      )}
+
+      {!paginacionCliente && onCambiarPagina && !cargando && (
+        <Box sx={{ borderTop: "1px solid", borderColor: "divider" }}>
+          <TablePagination
+            component="div"
+            count={total}
+            page={pagina}
+            rowsPerPage={filasPorPagina}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            onPageChange={(_, p) => onCambiarPagina(p)}
+            onRowsPerPageChange={(e) => {
+              onCambiarFilasPorPagina?.(Number(e.target.value));
+            }}
+            labelRowsPerPage="Filas por página"
+            labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count}`}
+          />
+        </Box>
+      )}
     </Paper>
   );
 }

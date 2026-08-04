@@ -1,53 +1,79 @@
-import type { ReactNode } from 'react';
-import { Box, Paper, Typography } from '@mui/material';
+import type { ReactNode } from "react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 
-interface Props {
-  titulo: string;
+export default function StatCard({
+  label,
+  valor,
+  icono,
+  tono = "#8B0000",
+  tendencia,
+}: {
+  label: string;
   valor: ReactNode;
-  icono?: ReactNode;
-  color?: string;
-}
-
-export default function StatCard({ titulo, valor, icono, color = '#8c1f28' }: Props) {
+  icono: ReactNode;
+  tono?: string;
+  tendencia?: { texto: string; tipo: boolean };
+}) {
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        border: '1px solid',
-        borderColor: 'divider',
-        borderRadius: 2,
-        px: 2.5,
-        py: 2,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 2,
+    <div
+      style={{
+        backgroundColor: "#FFFFFF",
+        border: "1px solid #E5E7EB",
+        borderRadius: 10,
+        padding: "16px 18px",
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "space-between",
+        gap: 12,
       }}
     >
-      {icono && (
-        <Box
-          sx={{
-            width: 44,
-            height: 44,
-            borderRadius: '10px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: color,
-            backgroundColor: `${color}14`,
-            flexShrink: 0,
+      <div>
+        <div
+          style={{
+            fontSize: "0.72rem",
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+            color: "#374151",
+            marginBottom: 6,
           }}
         >
-          {icono}
-        </Box>
-      )}
-      <Box>
-        <Typography variant="caption" sx={{ color: '#5c6470', fontWeight: 500 }}>
-          {titulo}
-        </Typography>
-        <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
+          {label}
+        </div>
+        <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "#111827", lineHeight: 1 }}>
           {valor}
-        </Typography>
-      </Box>
-    </Paper>
+        </div>
+        {tendencia && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              fontSize: "0.74rem",
+              marginTop: 8,
+              color: tendencia.tipo ? "#1E7A43" : "#B42318",
+            }}
+          >
+            {tendencia.tipo ? <TrendingDown size={14} /> : <TrendingUp size={14} />}
+            <span>{tendencia.texto}</span>
+          </div>
+        )}
+      </div>
+      <div
+        style={{
+          width: 42,
+          height: 42,
+          borderRadius: 10,
+          backgroundColor: `${tono}14`,
+          color: tono,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        {icono}
+      </div>
+    </div>
   );
 }

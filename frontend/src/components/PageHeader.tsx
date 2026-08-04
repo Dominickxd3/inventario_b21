@@ -1,43 +1,44 @@
-import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
+import type { ReactNode } from "react";
 
 export default function PageHeader({
   titulo,
   subtitulo,
   acciones,
-  breadcrumb,
 }: {
   titulo: string;
   subtitulo?: string;
   acciones?: ReactNode;
-  breadcrumb?: { label: string; to?: string }[];
 }) {
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        alignItems: "flex-end",
+        justifyContent: "space-between",
+        gap: 12,
+        marginBottom: 20,
+      }}
+    >
       <div>
-        {breadcrumb && breadcrumb.length > 0 && (
-          <nav className="mb-1 flex items-center gap-1 text-xs text-gray-500">
-            {breadcrumb.map((cr, i) => (
-              <span key={cr.label} className="flex items-center gap-1">
-                {i > 0 && <ChevronRight className="size-3.5 text-gray-400" />}
-                {cr.to ? (
-                  <Link to={cr.to} className="hover:text-b21-red">
-                    {cr.label}
-                  </Link>
-                ) : (
-                  <span className="font-medium text-gray-700">{cr.label}</span>
-                )}
-              </span>
-            ))}
-          </nav>
-        )}
-        <h1 className="text-xl font-semibold tracking-tight text-gray-900">
+        <h1
+          style={{
+            fontSize: "1.35rem",
+            fontWeight: 700,
+            letterSpacing: "-0.01em",
+            color: "#111827",
+            margin: 0,
+          }}
+        >
           {titulo}
         </h1>
-        {subtitulo && <p className="mt-0.5 text-sm text-gray-500">{subtitulo}</p>}
+        {subtitulo && (
+          <p style={{ margin: "4px 0 0", fontSize: "0.85rem", color: "#374151" }}>
+            {subtitulo}
+          </p>
+        )}
       </div>
-      {acciones && <div className="flex items-center gap-2">{acciones}</div>}
+      {acciones && <div style={{ display: "flex", alignItems: "center", gap: 8 }}>{acciones}</div>}
     </div>
   );
 }

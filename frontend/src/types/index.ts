@@ -42,20 +42,43 @@ export interface Bien {
   Eliminado: boolean | null;
 }
 
-export interface ListadoBienes {
-  data: Bien[];
+export interface ListadoPaginado<T> {
+  data: T[];
   total: number;
+}
+
+export interface RegistroHistorial {
+  Fecha?: string;
+  FechaMovimiento?: string;
+  FechaAsignacion?: string;
+  CodigoMovimiento?: string;
+  NombreMovimiento?: string;
+  Detalle?: string;
+  Observacion?: string;
+  Motivo?: string;
+  EstadoAntes?: string;
+  EstadoDespues?: string;
+  NombreEstado?: string;
+  ResponsableAntes?: string;
+  ResponsableDespues?: string;
+  Bombero?: string;
+  Usuario?: string;
+  TipoDocumento?: string;
+  NombreArchivoOriginal?: string;
+  RutaArchivo?: string;
+  IdArchivoGoogleDrive?: string;
+  [clave: string]: unknown;
 }
 
 export interface FichaBien {
   bien: Bien;
-  relacion: any[];
-  historialEstado: any[];
-  historialAsignacion: any[];
-  kardex: any[];
-  fotos: any[];
-  qr: any[];
-  documentos?: any[];
+  relacion: RegistroHistorial[];
+  historialEstado: RegistroHistorial[];
+  historialAsignacion: RegistroHistorial[];
+  kardex: RegistroHistorial[];
+  fotos: RegistroHistorial[];
+  qr: RegistroHistorial[];
+  documentos?: RegistroHistorial[];
 }
 
 export interface Articulo {
@@ -112,15 +135,6 @@ export interface Mantenimiento {
   Responsable: string | null;
 }
 
-export interface KardexRegistro {
-  IdKardex: number;
-  Fecha: string;
-  CodigoMovimiento: string;
-  NombreMovimiento: string;
-  Detalle: string | null;
-  UsuarioRegistro: number | null;
-}
-
 export interface DashboardResumen {
   TotalBienes: number;
   Operativos: number;
@@ -145,17 +159,15 @@ export interface DashboardData {
   }[];
 }
 
-export interface ReporteResponsable {
-  IdBombero: number;
-  CodigoBombero: string;
-  Nombre: string;
-  CantidadBienes: number;
-}
-
 export interface Catalogos {
   marcas: { IdMarca: number; NombreMarca: string }[];
   modelos: { IdModelo: number; NombreModelo: string; IdMarca: number; NombreMarca: string }[];
   estados: { IdEstado: number; NombreEstado: string }[];
-  ubicaciones: { IdUbicacion: number; NombreUbicacion: string; TipoUbicacion: string | null; IdUbicacionPadre: number | null }[];
+  ubicaciones: {
+    IdUbicacion: number;
+    NombreUbicacion: string;
+    TipoUbicacion: string | null;
+    IdUbicacionPadre: number | null;
+  }[];
   tiposMovimiento: { IdTipoMovimiento: number; NombreMovimiento: string }[];
 }

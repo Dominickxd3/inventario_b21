@@ -1,14 +1,46 @@
-import axios from 'axios';
-
-const TOKEN_KEY = 'b21_token';
-const USER_KEY = 'b21_user';
+import axios from "axios";
 
 export const api = axios.create({
-  baseURL: '/api',
+  baseURL: "/api",
+  timeout: 30000,
 });
 
+const TOKEN_KEY = "b21_token";
+const SESION_KEY = "b21_sesion";
+
+export function guardarToken(token: string) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function obtenerToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function guardarSesion(sesion: unknown) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(SESION_KEY, JSON.stringify(sesion));
+}
+
+export function obtenerSesion() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(SESION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function cerrarSesion() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(SESION_KEY);
+}
+
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem(TOKEN_KEY);
+  const token = obtenerToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -16,65 +48,25 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (res) => res,
   (error) => {
-    if (error.response?.status === 401) {
-      const url: string = error.config?.url ?? '';
-      if (!url.includes('/auth/login')) {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
-        }
+    if (error.response?.status === 401 && typeof window !== "undefined") {
+      const path = window.location.pathname;
+      if (!path.startsWith("/login")) {
+        cerrarSesion();
+        window.location.href = "/login";
       }
     }
     return Promise.reject(error);
   },
 );
 
-export function guardarSesion(data: {
-  token: string;
-  idUsuario: number;
-  idSesion: number;
-  usuario: string;
-  nombreCompleto: string;
-  codigoBombero: string | null;
-  rol: string | null;
-  roles: string[];
-  permisos: string[];
-  esAdmin: boolean;
-}) {
-  localStorage.setItem(TOKEN_KEY, data.token);
-  localStorage.setItem(USER_KEY, JSON.stringify(data));
-}
-
-export function obtenerSesion() {
-  const raw = localStorage.getItem(USER_KEY);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
-export function cerrarSesion() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(USER_KEY);
-}
-
 export function obtenerMensajeError(error: unknown): string {
   if (axios.isAxiosError(error)) {
-    const data = error.response?.data as
-      | { message?: string | string[] }
-      | undefined;
-    if (Array.isArray(data?.message)) {
-      return data!.message![0];
-    }
-    if (typeof data?.message === 'string') {
-      return data.message;
-    }
-    return data?.message ?? error.message;
+    const msg = error.response?.data?.message;
+    if (Array.isArray(msg)) return msg.join(", ");
+    if (typeof msg === "string") return msg;
+    return error.message;
   }
-  return 'Error inesperado.';
+  return "Ocurrió un error inesperado.";
 }
