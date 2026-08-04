@@ -313,47 +313,95 @@ Tipos de documento (TB_TipoDocumento):
 
 ## FASE 6 — Reportes
 
+Estado:
 
-Pendiente:
-
-
-- Dashboard.
-- Inventario general.
-- Kardex.
-- Historial equipos.
-- Reportes PDF.
-- Exportación Excel.
+COMPLETADO
 
 
+Incluye:
 
----
+
+- Dashboard con resumen y datos para gráficos (estados, movimientos por mes, mantenimientos y costos por mes).
+- Reporte inventario general.
+- Reporte kardex por bien (estados/ubicaciones/responsables antes y después).
+- Reporte préstamos.
+- Reporte mantenimiento (costo repuestos y costo total).
+- Reporte movimientos por periodo (filtros por fecha y tipo; agregado mensual).
+- Reporte responsables (cantidad de bienes asignados + listado de equipos).
+
+
+Pendiente (preparado, no generado aún):
+
+
+- Exportación PDF (PDF-LIB).
+- Exportación Excel (ExcelJS).
+
 
 ## FASE 7 — Frontend
+
+
+Estado:
+
+COMPLETADO (estructura base y módulos principales)
 
 
 Tecnología:
 
 
-React
+- React
 
-TypeScript
+- TypeScript
 
-Vite
+- Vite
 
-Tailwind CSS
+- Tailwind CSS
+
+- Material UI
+
+- Lucide React
+
+- React Router
+
+- Axios
+
+- React Hook Form + Zod
+
+- Recharts
 
 
+Módulos implementados:
 
-Módulos:
+- Login (JWT, guardado de sesión en localStorage).
+
+- Dashboard con indicadores y gráficos (estados, movimientos y costos por mes).
+
+- Inventario (búsqueda, filtros, paginación, alta de bienes, ficha del bien con QR, kardex, historiales, fotos y documentos).
+
+- Movimientos (listado, filtros, detalle).
+
+- Préstamos (listado, registro de préstamo con bien y bomberos, registro de devolución).
+
+- Mantenimiento (listado, registro con repuestos, finalización con costo y trabajo realizado, ficha de detalle).
+
+- Reportes (inventario, kardex, movimientos por periodo, mantenimiento, responsables; exportación CSV preparada).
+
+- Usuarios (listado con roles).
 
 
-- Login.
-- Dashboard.
-- Inventario.
-- Kardex.
-- Préstamos.
-- Mantenimiento.
-- Reportes.
+Seguridad frontend:
+
+- Rutas protegidas (RequireAuth).
+
+- Control por permisos (RequirePermiso) y ocultamiento de menú y botones según permisos.
+
+- Interceptor Axios que redirige a /login ante 401.
+
+
+Pendiente:
+
+- Registro de fotos y documentos del bien en el alta (carga a Google Drive).
+
+- Exportación PDF (PDF-LIB) y Excel (ExcelJS).
 
 
 
@@ -463,6 +511,8 @@ Los scripts se ejecutan en orden y quedan respaldados en backend/sql/:
 - fase4_mantenimiento.sql (mantenimiento + repuestos).
 
 - fase5_archivos.sql (fotos, documentos, Google Drive).
+
+- fase6_reportes.sql (dashboard y reportes institucionales).
 
 - faseN_pruebas.sql (pruebas de cada fase).
 
@@ -1039,6 +1089,20 @@ Fotos y documentos:
 
 Reportes y consultas:
 
+- SP_DashboardResumen
+
+- SP_ReporteInventarioGeneral
+
+- SP_ReporteKardexBien
+
+- SP_ReportePrestamos
+
+- SP_ReporteMantenimiento
+
+- SP_ReporteMovimientosPeriodo
+
+- SP_ReporteResponsables
+
 - SP_DashboardInventario
 
 - SP_ReporteEstados
@@ -1141,6 +1205,8 @@ mantenimiento/
 
 archivos/
 
+reportes/
+
 common/
 
 database/
@@ -1182,10 +1248,10 @@ No crear código directamente sin analizar.
 
 Estado actual:
 
-FASE 5 completada.
+FASE 6 completada.
 
 
 Siguiente trabajo:
 
-FASE 6 — Reportes (Dashboard, inventario general, kardex, reportes PDF y Excel).
+FASE 7 — Frontend (React, TypeScript, Vite, Tailwind CSS).
 

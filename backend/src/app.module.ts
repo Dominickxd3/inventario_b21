@@ -12,6 +12,7 @@ import { MantenimientoModule } from './mantenimiento/mantenimiento.module';
 import { MovimientosModule } from './movimientos/movimientos.module';
 import { RolesModule } from './roles/roles.module';
 import { UsuariosModule } from './usuarios/usuarios.module';
+import { ReportesModule } from './reportes/reportes.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { UsuariosModule } from './usuarios/usuarios.module';
     MovimientosModule,
     MantenimientoModule,
     ArchivosModule,
+    ReportesModule,
   ],
   providers: [
     // Guards globales: JWT -> Roles -> Permisos
